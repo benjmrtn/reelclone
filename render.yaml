@@ -2,8 +2,6 @@ services:
   - type: web
     name: reelclone-api
     env: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
     plan: free
     envVars:
       - key: TEMP_DIR
