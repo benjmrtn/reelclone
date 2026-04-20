@@ -15,7 +15,12 @@ export async function extractTemplate(
   body.append('video', video)
   body.append('api_key', apiKey)
 
-  const res = await fetch(`${API_BASE}/extract`, { method: 'POST', body })
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/extract`, { method: 'POST', body })
+  } catch {
+    throw new Error("Backend inaccessible. Vérifie que le serveur est démarré et que BACKEND_URL est configuré sur Vercel.")
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Erreur inconnue' }))
     throw new Error(err.detail ?? "Erreur lors de l'extraction")
