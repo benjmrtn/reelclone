@@ -9,7 +9,8 @@ import pytesseract
 logger = logging.getLogger(__name__)
 
 FFMPEG_PATH = os.getenv("FFMPEG_PATH", "ffmpeg")
-FRAME_INTERVAL = 0.5
+FRAME_INTERVAL = 2.0          # 1 frame every 2s — sufficient for Reels overlays (stay 2-5s on screen)
+MAX_OCR_FRAMES = 60           # hard cap to prevent runaway on long videos
 OCR_CONFIDENCE_THRESHOLD = 50
 POSITION_TOLERANCE = 0.05
 
@@ -42,11 +43,12 @@ def extract_overlays(video_path: Path, frames_dir: Path) -> list[dict]:
 
 
 def _extract_frames(video_path: Path, frames_dir: Path) -> None:
-    """Sample video at 2fps (every 0.5s) and write JPEGs."""
+    """Sample video at 0.5fps (every 2s) and write JPEGs. Capped at MAX_OCR_FRAMES."""
     cmd = [
         FFMPEG_PATH,
         "-i", str(video_path),
-        "-vf", "fps=2",
+        "-vf", "fps=0.5",
+        "-frames:v", str(MAX_OCR_FRAMES),
         str(frames_dir / "frame_%04d.jpg"),
         "-y",
     ]
