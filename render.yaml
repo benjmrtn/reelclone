@@ -19,4 +19,4 @@ services:
       - key: MAX_VIDEO_DURATION_SECONDS
         value: "180"
       - key: ALLOWED_ORIGINS
-        value: https://reelclone.vercel.app
+        value: https://frontend-five-alpha-71.vercel.app
