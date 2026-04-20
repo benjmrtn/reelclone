@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: reelclone-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: TEMP_DIR
+        value: /tmp/reelclone
+      - key: FFMPEG_PATH
+        value: ffmpeg
+      - key: FFPROBE_PATH
+        value: ffprobe
+      - key: TESSERACT_PATH
+        value: tesseract
+      - key: MAX_VIDEO_SIZE_MB
+        value: "500"
+      - key: MAX_VIDEO_DURATION_SECONDS
+        value: "180"
+      - key: ALLOWED_ORIGINS
+        value: https://reelclone.vercel.app
