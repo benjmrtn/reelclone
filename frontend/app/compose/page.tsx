@@ -19,7 +19,7 @@ export default function ComposePage() {
 
   const pollUntilReady = (sessionId: string): Promise<void> =>
     new Promise((resolve, reject) => {
-      const TIMEOUT_MS = 5 * 60 * 1000
+      const TIMEOUT_MS = 12 * 60 * 1000
       const started = Date.now()
 
       const interval = setInterval(async () => {

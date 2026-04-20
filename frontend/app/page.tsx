@@ -22,31 +22,38 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [step, setStep] = useState('')
+  const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const canSubmit = apiKey.startsWith('sk-ant-') && videoFile !== null && !loading
 
   const pollUntilReady = (sessionId: string): Promise<void> =>
     new Promise((resolve, reject) => {
-      const TIMEOUT_MS = 5 * 60 * 1000
+      const TIMEOUT_MS = 12 * 60 * 1000
       const started = Date.now()
+
+      const tick = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - started) / 1000))
+      }, 1000)
 
       const interval = setInterval(async () => {
         if (Date.now() - started > TIMEOUT_MS) {
           clearInterval(interval)
-          reject(new Error("Délai dépassé. L'extraction a pris trop de temps."))
+          clearInterval(tick)
+          reject(new Error("Délai dépassé (12 min). La vidéo est peut-être trop longue ou le serveur est surchargé."))
           return
         }
         try {
           const state = await getStatus(sessionId)
           setProgress(state.progress)
           setStep(state.step)
-          if (state.status === 'ready') { clearInterval(interval); resolve() }
+          if (state.status === 'ready') { clearInterval(interval); clearInterval(tick); resolve() }
           else if (state.status === 'error') {
             clearInterval(interval)
+            clearInterval(tick)
             reject(new Error(state.error ?? "Erreur d'extraction"))
           }
-        } catch (err) { clearInterval(interval); reject(err) }
+        } catch (err) { clearInterval(interval); clearInterval(tick); reject(err) }
       }, 2000)
     })
 
@@ -55,6 +62,8 @@ export default function HomePage() {
     if (!videoFile || !apiKey) return
     setLoading(true)
     setError(null)
+    setElapsed(0)
+    setProgress(0)
     try {
       const { session_id } = await extractTemplate(videoFile, apiKey)
       sessionStorage.setItem('session_id', session_id)
@@ -123,16 +132,25 @@ export default function HomePage() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-secondary font-mono">
-                    {STEP_LABELS[step] ?? 'Traitement en cours...'}
+                    {elapsed < 60 && progress === 0
+                      ? '⏳ Démarrage du serveur...'
+                      : STEP_LABELS[step] ?? 'Traitement en cours...'}
                   </span>
-                  <span className="text-accent font-mono font-bold">{progress}%</span>
+                  <span className="text-accent font-mono font-bold">
+                    {progress > 0 ? `${progress}%` : `${elapsed}s`}
+                  </span>
                 </div>
                 <div className="h-1.5 bg-bg-elevated rounded-full overflow-hidden">
                   <div
                     className="h-full bg-accent rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%` }}
+                    style={{ width: progress > 0 ? `${progress}%` : '5%' }}
                   />
                 </div>
+                {elapsed > 30 && progress === 0 && (
+                  <p className="text-xs text-text-secondary">
+                    Le serveur Render gratuit se réveille (~60s). C&apos;est normal.
+                  </p>
+                )}
               </div>
             )}
 
